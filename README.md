@@ -10,26 +10,42 @@
 1. [Operating system](#operating-system)
 1. [Configuration](#configuration)
 1. [Tuning](#tuning)
+1. [Software](software/software.md)
 
 ## Introduction
 Kernel-based Virtual Machine (*KVM*) is a virtualization module in the Linux kernel that allows the kernel to function as a hypervisor. In order to use this feature KVM requires a processor with hardware virtualization extensions (*Intel VT or AMD-V*). The Open Virtual Machine Firmware (*OVMF*) is a project to enable UEFI support for virtual machines. Starting with Linux 3.9 and recent versions of QEMU, it is now possible to passthrough a graphics card, offering the VM native graphics performance which is useful for graphic-intensive tasks. This project focuses, according to these presets, to create a virtual machine with KVM and enable GPU-passthrough. After the presets are set, flexibility and deployment in datacenters are the main aspects of this work. Mainly Docker and Kubernetes are used therefore. Details and the whole overview will be covered in the Bachelor Thesis.
 
 ## Requirements and Dependencies
-As already mentioned in the introduction the hardware must support the following technologies in order to work properly with KVM. The CPU must support [*hardware virtualization*](https://ark.intel.com/content/www/us/en/ark/search/featurefilter.html?productType=873&0_VTD=True) (for KVM) and `IOMMU` (*Input-output memory management unit*) for the passthrough. Additionally the motherboard must support `IOMMU` as well for the GPU passthrough. Both the chipset and the BIOS must support it. The last requriement is that the GPU ROM must support UEFI. **If the hardware does not support those mentioned technologies it is not possible to run a KVM with GPU passthrough.**
+A VGA passthrough relies on a number of technonogies that are not ubiquitous as of today. As already mentioned in the introduction the hardware must support the following technologies in order to work properly. 
+* The CPU must support must support hardware virtualization (for KVM) and IOMMU (for the passthrough itself). Compatible Intel CPUs (Intel VT-x and Intel VT-d) are listed [here](https://ark.intel.com/content/www/us/en/ark/search/featurefilter.html?productType=873&0_VTD=True). AMD CPUs including the Bulldozer generation and up (including Zen) should be compatible.
+`IOMMU` (*Input-output memory management unit*) is a generic name for Intel VT-d and AMD-Vi. 
+* Additionally the motherboard must support `IOMMU` as well for the GPU passthrough. Both the chipset and the BIOS must support it. Here is a [list of supported hardware](https://en.wikipedia.org/wiki/List_of_IOMMU-supporting_hardware).
+* The last requriement is that the [GPU ROM](https://www.techpowerup.com/vgabios/) must support UEFI.
+
+**If the hardware does not support those mentioned technologies it is not possible to run a KVM with GPU passthrough.**
+
+### Important
+***This project focuses mainly on Intel CPUs and Nvidia GPUs! For AMD CPUs / GPUs head over to [this](https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Prerequisites) wiki.***
+
+VT-d stands for Intel Virtualization Technology for Directed I/O and should not be confused with VT-x Intel Virtualization Technology. VT-x allows one hardware platform to function as multiple “virtual” platforms while VT-d improves security and reliability of the systems and also improves performance of I/O devices in virtualized environments.
 
 ### Hardware
-For this test run the following hardware was used. It supports hardware virtualization, IOMMU and GPU passthrough.
+All starts with the right hardware to enable the full potential and use it in software. For this test run the following hardware was used.
 
 | Component   | Description                     |
-| ----------- |:------------------------------- |
+| ----------- | ------------------------------- |
 | Motherboard | ASUS MAXIMUS VII Ranger         |
 | CPU         | Intel Core i7 4790k @ 4.00GHZ   |
 | GPU         | Nvidia GeForce GTX 970 4GB VRAM |
 | RAM         | 16GB DDR3                       |
 | Storage     | 120 GB SSD                      |
 
+Hardware virtualization, IOMMU and GPU passthrough are perfectly supported with this hardware.
+
 ### BIOS/UEFI
-Initially not all technolgies are enabled by default in the BIOS/UEFI. It is neccessary to enable the following parameters. It is highly recommended that a Central Processing Unit (CPU) supports Hyperthreading. A virtual machine can profit of the additional (virtual) cores. In this case the following parameters must be set:
+Initially not all technolgies are enabled by default in the BIOS/UEFI. It is neccessary to enable the following parameters listed below. It is highly recommended that a Central Processing Unit (CPU) supports Hyperthreading. A virtual machine can profit of the additional (virtual) cores.
+
+**ASUS MAXIMUS VII Ranger**
 
 ```
 Advanced / CPU Configuration → Intel Virtualization Technology = Enabled
@@ -47,26 +63,34 @@ Hardware and BIOS/UEFI settings are all done. Choosing the right operating syste
 
 Some modifications are needed to turn the operating system into a hypervisor.
 
-#### Load Kernel Modules/Parameters
-Append `intel_iommu=on` and `iommu=pt` to the following GRUB line in `/etc/default/grub`
+#### Load Kernel Parameters
+Loading the correct kernel parameters will enable IOMMU on the operating system layer.
+`intel_iommu=on` enables IOMMU and `iommu=pt` will prevent Linux from touching devices which cannot be passed through. 
 
 ```shell
-GRUB_CMDLINE_LINUX_DEFAULT=" ... intel_iommu=on iommu=pt vfio-pci.ids=10de:13c2,10de:0fbb"
+/etc/default/grub
+------------------------------------------------------------------------------------------
+GRUB_CMDLINE_LINUX_DEFAULT=" ... intel_iommu=on iommu=pt"
 ```
 
 ##### Regenerate GRUB
+The GRUB must be regenerated that the settings apply on every restart.
 
 ```shell
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 #### Check DMAR and IOMMU
+After rebooting, check dmesg to confirm that IOMMU has been correctly enabled: 
 
 ```shell
 sudo dmesg | grep -i -e DMAR -e IOMMU  
 ```
 ![](https://i.imgur.com/paxsrMd.png)
 
+vfio-pci.ids=10de:13c2,10de:0fbb
+
+#### Ensuring that the groups are valid
 ```shell
 #!/bin/bash
 shopt -s nullglob
@@ -77,6 +101,9 @@ for g in `find /sys/kernel/iommu_groups/* -maxdepth 0 -type d | sort -V`; do
     done;
 done;
 ```
+
+##### Output
+
 ![](https://i.imgur.com/l0oL8dG.png)
 
 #### Update GRUB
