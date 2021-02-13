@@ -1,0 +1,39 @@
+[    0.007390] ACPI: DMAR 0x00000000C8CB4408 0000B8 (v01 INTEL  BDW      00000001 INTL 00000001)
+[    0.041657] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.9-x86_64 root=UUID=aeae42e3-30f2-44ff-a71f-710e311a3a96 ro quiet resume=UUID=4b26c43b-c6ef-4d50-aabe-bb0200bf03d3 udev.log_priority=3 intel_iommu=on iommu=pt vfio-pci.ids=10de:13c2,10de:0fbb
+[    0.041705] DMAR: IOMMU enabled
+[    0.096856] DMAR: Host address width 39
+[    0.096857] DMAR: DRHD base: 0x000000fed90000 flags: 0x0
+[    0.096860] DMAR: dmar0: reg_base_addr fed90000 ver 1:0 cap c0000020660462 ecap f0101a
+[    0.096860] DMAR: DRHD base: 0x000000fed91000 flags: 0x1
+[    0.096862] DMAR: dmar1: reg_base_addr fed91000 ver 1:0 cap d2008c20660462 ecap f010da
+[    0.096863] DMAR: RMRR base: 0x000000c8c23000 end: 0x000000c8c30fff
+[    0.096864] DMAR: RMRR base: 0x000000cb000000 end: 0x000000cf1fffff
+[    0.096865] DMAR-IR: IOAPIC id 8 under DRHD base  0xfed91000 IOMMU 1
+[    0.096866] DMAR-IR: HPET id 0 under DRHD base 0xfed91000
+[    0.096866] DMAR-IR: x2apic is disabled because BIOS sets x2apic opt out bit.
+[    0.096866] DMAR-IR: Use 'intremap=no_x2apic_optout' to override the BIOS setting.
+[    0.097279] DMAR-IR: Enabled IRQ remapping in xapic mode
+[    0.160193] iommu: Default domain type: Passthrough (set via kernel command line)
+[    0.286694] DMAR: No ATSR found
+[    0.286721] DMAR: dmar0: Using Queued invalidation
+[    0.286725] DMAR: dmar1: Using Queued invalidation
+[    0.349926] pci 0000:00:00.0: Adding to iommu group 0
+[    0.349934] pci 0000:00:01.0: Adding to iommu group 1
+[    0.349939] pci 0000:00:02.0: Adding to iommu group 2
+[    0.349945] pci 0000:00:03.0: Adding to iommu group 3
+[    0.349950] pci 0000:00:14.0: Adding to iommu group 4
+[    0.349957] pci 0000:00:16.0: Adding to iommu group 5
+[    0.349962] pci 0000:00:19.0: Adding to iommu group 6
+[    0.349968] pci 0000:00:1a.0: Adding to iommu group 7
+[    0.349973] pci 0000:00:1b.0: Adding to iommu group 8
+[    0.349978] pci 0000:00:1d.0: Adding to iommu group 9
+[    0.349989] pci 0000:00:1f.0: Adding to iommu group 10
+[    0.349994] pci 0000:00:1f.2: Adding to iommu group 10
+[    0.350000] pci 0000:00:1f.3: Adding to iommu group 10
+[    0.350003] pci 0000:01:00.0: Adding to iommu group 1
+[    0.350007] pci 0000:01:00.1: Adding to iommu group 1
+[    0.350066] DMAR: Intel(R) Virtualization Technology for Directed I/O
+[    0.361772] AMD-Vi: AMD IOMMUv2 driver by Joerg Roedel <jroedel@suse.de>
+[    0.361773] AMD-Vi: AMD IOMMUv2 functionality not available on this system
+[    0.929873]     intel_iommu=on
+[    2.504434] i915 0000:00:02.0: [drm] DMAR active, disabling use of stolen memory
