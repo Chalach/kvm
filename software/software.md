@@ -1,15 +1,28 @@
-### Software
+# Software
+
+![](https://i.imgur.com/7KqCuh1.jpg)
+
+## Table of Content
+1. [Introduction](#introduction)
+1. [Docker and NVIDIA Container Toolkit](#requirements-and-dependencies)
+1. [Benchmark](#benchmark)
+1. [Kubernetes](#kubernetes)
+1. [Terraform](#terraform)
+1. [Reference](#reference)
+
+## Introduction
+
 Installing `Docker` and `Nvidia Docker Contianer` to perform a benchmark.
 
 https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
 
-#### Setting up Docker
+## Docker
 
 ```shell=
 curl https://get.docker.com | sh && sudo systemctl --now enable docker
 ```
 
-#### Setting up NVIDIA Container Toolkit
+### NVIDIA Container Toolkit
 
 ```shell=
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
@@ -101,7 +114,12 @@ nvidia-smi
 
 ![](https://i.imgur.com/W160JfL.png)
 
-### Kubernetes
+## Benchmark
+Running Code and data output of the results.
+
+## Kubernetes
+Container orchestration
+
 ```shell
 sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2 curl
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -109,3 +127,23 @@ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/
 sudo apt-get update
 sudo apt-get install -y kubectl
 ```
+
+## Terraform
+IAAS (Infrastructure as a Service)
+
+### Installation
+```shell
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+```
+
+```shell
+sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+```
+
+```shell
+sudo apt install terraform
+```
+
+## Reference
+* https://medium.com/onfido-tech/container-orchestration-with-kubernetes-an-overview-da1d39ff2f91
+* https://www.terraform.io/
