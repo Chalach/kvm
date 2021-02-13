@@ -1,6 +1,6 @@
 # Kernel-based Virtual Machine
 
-![reterter](https://i.imgur.com/ghfNbDH.png)
+![](https://i.imgur.com/ghfNbDH.png)
 
 ## Table of Content
 1. [Introduction](#introduction)
