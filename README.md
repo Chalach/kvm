@@ -150,12 +150,53 @@ done;
 ```
 
 ##### Output
-
-![](https://i.imgur.com/l0oL8dG.png)
-
 An IOMMU group is the smallest set of physical devices that can be passed to a virtual machine.
 
-#### Update GRUB
+```shell
+IOMMU Group 0:
+	00:00.0 Host bridge [0600]: Intel Corporation 4th Gen Core Processor DRAM Controller [8086:0c00] (rev 06)
+IOMMU Group 1:
+	00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v3/4th Gen Core Processor PCI Express x16 Controller [8086:0c01] (rev 06)
+	01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GM204 [GeForce GTX 970] [10de:13c2] (rev a1)
+	01:00.1 Audio device [0403]: NVIDIA Corporation GM204 High Definition Audio Controller [10de:0fbb] (rev a1)
+IOMMU Group 2:
+	00:02.0 VGA compatible controller [0300]: Intel Corporation Xeon E3-1200 v3/4th Gen Core Processor Integrated Graphics Controller [8086:0412] (rev 06)
+IOMMU Group 3:
+	00:03.0 Audio device [0403]: Intel Corporation Xeon E3-1200 v3/4th Gen Core Processor HD Audio Controller [8086:0c0c] (rev 06)
+IOMMU Group 4:
+	00:14.0 USB controller [0c03]: Intel Corporation 9 Series Chipset Family USB xHCI Controller [8086:8cb1]
+IOMMU Group 5:
+	00:16.0 Communication controller [0780]: Intel Corporation 9 Series Chipset Family ME Interface #1 [8086:8cba]
+IOMMU Group 6:
+	00:19.0 Ethernet controller [0200]: Intel Corporation Ethernet Connection (2) I218-V [8086:15a1]
+IOMMU Group 7:
+	00:1a.0 USB controller [0c03]: Intel Corporation 9 Series Chipset Family USB EHCI Controller #2 [8086:8cad]
+IOMMU Group 8:
+	00:1b.0 Audio device [0403]: Intel Corporation 9 Series Chipset Family HD Audio Controller [8086:8ca0]
+IOMMU Group 9:
+	00:1d.0 USB controller [0c03]: Intel Corporation 9 Series Chipset Family USB EHCI Controller #1 [8086:8ca6]
+IOMMU Group 10:
+	00:1f.0 ISA bridge [0601]: Intel Corporation Z97 Chipset LPC Controller [8086:8cc4]
+	00:1f.2 SATA controller [0106]: Intel Corporation 9 Series Chipset Family SATA Controller [AHCI Mode] [8086:8c82]
+	00:1f.3 SMBus [0c05]: Intel Corporation 9 Series Chipset Family SMBus Controller [8086:8ca2]
+```
+
+#### Isolating the GPU
+In order to assign a device and all those sharing the same IOMMU group to a virtual machine must have their driver replayced by a stub driver or a VFIO driver. It prevents the host system from interacting with them. This is why the graphics output is moved to the CPU graphics in the BIOS/UEFI section.
+
+Binding those devices to a VFIO driver is the next step. It isolates the GPU from the host system and allows afterwards a passthrough to the virtual machine.
+
+##### Binding vfio-pci via device ID
+Referencing to the previous output of the IOMMU group contains the needed IDs.
+
+```shell
+IOMMU Group 1:
+	00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v3/4th Gen Core Processor PCI Express x16 Controller [8086:0c01] (rev 06)
+	01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GM204 [GeForce GTX 970] [10de:13c2] (rev a1)
+	01:00.1 Audio device [0403]: NVIDIA Corporation GM204 High Definition Audio Controller [10de:0fbb] (rev a1)
+```
+
+Update GRUB
 
 vfio-pci.ids=10de:13c2,10de:0fbb
 #### Update initramfs
