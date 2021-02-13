@@ -136,9 +136,16 @@ https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Setting_up_IOMMU
 
 ```shell
 sudo virsh list --inactive
-sudo virsh edit ubuntu18.04
+setlocale: No such file or directory
+ Id   Name          State
+------------------------------
+ -    ubuntu18.04   shut off
+ 
 ```
 
+```shell
+sudo virsh edit ubuntu18.04
+```
 ## Tuning
 
 
