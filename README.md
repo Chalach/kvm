@@ -7,9 +7,10 @@
 1. [Requirements and Dependencies](#requirements-and-dependencies)
 1. [Hardware](#hardware)
 1. [Operating system](#operating-system)
+1. [KVM](#install-kvm)
 1. [Configuration](#configuration)
-1. [Tuning](#tuning)
 1. [Software](software/software.md)
+1. [Reference](#reference)
 
 ## Introduction
 Kernel-based Virtual Machine (*KVM*) is a virtualization module in the Linux kernel that allows the kernel to function as a hypervisor. If enabled, the Linux operating system becomes a hypervisor Type-1 (native / bare-metal hypervisor). In order to use this feature KVM requires a processor with hardware virtualization extensions (*Intel VT or AMD-V*). The Open Virtual Machine Firmware (*OVMF*) is a project to enable UEFI support for virtual machines. Starting with Linux 3.9 and recent versions of QEMU, it is now possible to passthrough a graphics card, offering the VM native graphics performance which is useful for graphic-intensive tasks.
@@ -69,7 +70,7 @@ Selecting the right hardware and setting the appropriate BIOS/UEFI settings is n
 ### Operating system
 [Manjaro KDE 20.2.1](https://manjaro.org/download/#kde-plasma) is an accessible, friendly, open-source operating system suitable for experts and newcomers. It is not a proprietary operating system which leads to full control over the hardware without restrictions. In such an operating system are we interested in. Manjaro ships with different desktop environments like *Gnome*, *KDE Plasma*, *XFCE* and *Architect* for a familiar look and feel.
 
-As already announced some modifications are neccessary to turn the operating system into a hypervisor.
+As already announced some modifications are neccessary to turn the operating system into a hypervisor. After the modifications the KVM service and addtional packages must be installed.
 
 #### Load Kernel Parameters
 Loading the correct kernel parameters will enable IOMMU on the operating system.
@@ -187,7 +188,7 @@ In order to assign a device and all those sharing the same IOMMU group to a virt
 Binding those devices to a VFIO driver is the next step. It isolates the GPU from the host system and allows afterwards a passthrough to the virtual machine.
 
 ##### Binding vfio-pci via device ID
-Referencing to the previous output of the IOMMU group contains the needed IDs.
+Referencing to the previous output of the IOMMU group contains the needed IDs which will targeted by vfio-pci.
 
 ```shell
 IOMMU Group 1:
@@ -196,15 +197,71 @@ IOMMU Group 1:
 	01:00.1 Audio device [0403]: NVIDIA Corporation GM204 High Definition Audio Controller [10de:0fbb] (rev a1)
 ```
 
-Update GRUB
+Not all PCI-E slots are the same. In some cases PCIe slots provided by the motherboard are for the CPU and PCH. Depending on the CPU, it is possible that the processor-based PCIe slot does not support isolation properly. In this case the PCI slot itself will appear to be grouped with the device that is connected to it. This is fine as long as the device itself is in the IOMMU group and not any other unrelated device. 
 
+The IDs must be added to the kernel parameters. Refere to [Load Kernel Parameters](#load-kernel-parameters) to do so.
+
+```shell
 vfio-pci.ids=10de:13c2,10de:0fbb
-#### Update initramfs
+```
 
-## Install KVM
+##### Loading vfio-pci early
+Loading the vfio-pci early will prevent the graphics driver to bind the card. Arch Linux has already vfio-pci built as module. In `/etc/mkinitcpio.conf` the following modules `vfio_pci vfio vfio_iommu_type1 vfio_virqfd` and hook `modconf` must be loaded.
+
+```shell
+MODULES=(... vfio_pci vfio vfio_iommu_type1 vfio_virqfd ...)
+HOOKS=(... modconf ...)
+```
+
+If any driver such as `nouveau, radeon, amdgpu, i915` is also loaded with MODULES() the VFIO modules must precede it.
+
+##### Update initramfs
+Regenerating the initramfs will load the modules and take effect.
+
+```shell
+mkinitcpio -P
+```
+
+##### Verify the configuration
+A restart is required after regenerating initramfs. After the restart the following command will check if everything worked fine.
+
+```shell
+sudo dmesg | grep -i vfio
+[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-5.9-x86_64 root=UUID=aeae42e3-30f2-44ff-a71f-710e311a3a96 ro quiet resume=UUID=4b26c43b-c6ef-4d50-aabe-bb0200bf03d3 udev.log_priority=3 intel_iommu=on iommu=pt vfio-pci.ids=10de:13c2,10de:0fbb
+[    0.040111] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.9-x86_64 root=UUID=aeae42e3-30f2-44ff-a71f-710e311a3a96 ro quiet resume=UUID=4b26c43b-c6ef-4d50-aabe-bb0200bf03d3 udev.log_priority=3 intel_iommu=on iommu=pt vfio-pci.ids=10de:13c2,10de:0fbb
+[    0.954733] VFIO - User Level meta-driver version: 0.3
+[    0.958058] vfio-pci 0000:01:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=none
+[    0.973087] vfio_pci: add [10de:13c2[ffffffff:ffffffff]] class 0x000000/00000000
+[    0.989739] vfio_pci: add [10de:0fbb[ffffffff:ffffffff]] class 0x000000/00000000
+[    2.508561] vfio-pci 0000:01:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=none
+[ 1182.379966] vfio-pci 0000:01:00.0: enabling device (0000 -> 0003)
+[ 1182.380134] vfio-pci 0000:01:00.0: vfio_ecap_init: hiding ecap 0x1e@0x258
+[ 1182.380140] vfio-pci 0000:01:00.0: vfio_ecap_init: hiding ecap 0x19@0x900
+[ 1182.523411] vfio-pci 0000:00:1d.0: vfio_cap_init: hiding cap 0xa@0x58
+```
+
+WIth the following two commands the loaded drivers per device can be verified.
+
+```shell
+lspci -nnk -d 10de:13c2
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GM204 [GeForce GTX 970] [10de:13c2] (rev a1)
+	Subsystem: ASUSTeK Computer Inc. Device [1043:8508]
+	Kernel driver in use: vfio-pci
+	Kernel modules: nouveau
+```
+
+```shell
+lspci -nnk -d 10de:0fbb
+01:00.1 Audio device [0403]: NVIDIA Corporation GM204 High Definition Audio Controller [10de:0fbb] (rev a1)
+	Subsystem: ASUSTeK Computer Inc. Device [1043:8508]
+	Kernel driver in use: vfio-pci
+	Kernel modules: snd_hda_intel
+```
+
+Everything worked fine as the `Kernel driver` is vfio-pci.
+
+## KVM
 The following packages are needed to install KVM on Manjaro KDE 20.2.1 `libvirt`, `qemu`, `edk2-ovmf`, `virt-manager`. For this setup the following versions of the packages were installed.
-
-
 
 | Package        | Version     |
 |:-------------- |:----------- |
@@ -213,17 +270,28 @@ The following packages are needed to install KVM on Manjaro KDE 20.2.1 `libvirt`
 | `edk2-ovmf`    | *202011-1*  |
 | `virt-manager` | *3.2.0-1*   |
 
+### Installation
 
-## Enable KVM
-To enable KVM it is neccessary to enter the following two commands to enable and start the service.
+```shell
+sudo pacman -S libvirt qemu edk2-ovmf virt-manager
+```
+
+### Enable KVM
+To activate KVM it is neccessary to enter the following two commands to enable and start the appropriated services.
 
 ```shell
 sudo systemctl enable libvirtd
 sudo systemctl start libvirtd
 ```
 
-### Configuration
-https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Setting_up_IOMMU
+## Configuration
+Setting up a KVM with the `virt-manager` is a graphical way to achive it. Selecting a image, in this case Ubuntu 18.04.5 LTS, is the first step of this self explaining setup of a KVM. Initially it is important not to add the GPU to the virtual machine. After the installation was successful the virtual machine must be shut down and the GPU can be added like a resource. Important is that the full IOMMU group must be added as resource otherwise the passthrough will fail.
+
+Adding a keyboard and mouse to the VM per passthrough is highly recommended. Keep in mind that a second keyboard and mouse should be attached to the main OS to controll/manage the VM. 
+
+It is possible to tweak the configuration of the virtual machine with the following commands.
+
+*List all virtual machines*
 
 ```shell
 sudo virsh list --inactive
@@ -234,19 +302,36 @@ setlocale: No such file or directory
  
 ```
 
+*Edit the selected virtual machine*
+
 ```shell
 sudo virsh edit ubuntu18.04
 ```
-## Tuning
+Getting the graphics card into the virtual machine is one part. The second one is to install the driver in order to have a fully working GPU. Viewing the GPU inside of the virtual machine is not the issue. Installing the driver and having an output is the bigger part of the deal. Nvidia has a build-in virtualization detection included in the driver. But this detection is very basic and can be bypassed with the following change in the VM configuration XML.
 
+```shell
+...
+<features>
+  ...
+  <hyperv>
+    ...
+    <vendor_id state='on' value='randomid'/>
+    ...
+  </hyperv>
+  ...
+  <kvm>
+    <hidden state='on'/>
+  </kvm>
+  ...
+</features>
+...
+```
 
-### Setting up the virtual machine operating system
-For the virtual machine operating system Ubuntu 18.04.5 LTS was used.
+Other tweaks and performance tuning is included in the first reference.
 
+## Software
+Software and related technologies are included in the following [document](software/software.md).
 
-### Reference
-https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF
-
-https://www.linux-kvm.org/images/b/b3/01x09b-VFIOandYou-small.pdf
-
-https://serverfault.com/questions/222010/difference-between-xen-pv-xen-kvm-and-hvm
+## Reference
+* https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF
+* https://www.linux-kvm.org/images/b/b3/01x09b-VFIOandYou-small.pdf
