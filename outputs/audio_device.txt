@@ -1,0 +1,4 @@
+01:00.1 Audio device [0403]: NVIDIA Corporation GM204 High Definition Audio Controller [10de:0fbb] (rev a1)
+	Subsystem: ASUSTeK Computer Inc. Device [1043:8508]
+	Kernel driver in use: vfio-pci
+	Kernel modules: snd_hda_intel

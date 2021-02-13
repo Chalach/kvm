@@ -1,0 +1,11 @@
+[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-5.9-x86_64 root=UUID=aeae42e3-30f2-44ff-a71f-710e311a3a96 ro quiet resume=UUID=4b26c43b-c6ef-4d50-aabe-bb0200bf03d3 udev.log_priority=3 intel_iommu=on iommu=pt vfio-pci.ids=10de:13c2,10de:0fbb
+[    0.040111] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.9-x86_64 root=UUID=aeae42e3-30f2-44ff-a71f-710e311a3a96 ro quiet resume=UUID=4b26c43b-c6ef-4d50-aabe-bb0200bf03d3 udev.log_priority=3 intel_iommu=on iommu=pt vfio-pci.ids=10de:13c2,10de:0fbb
+[    0.954733] VFIO - User Level meta-driver version: 0.3
+[    0.958058] vfio-pci 0000:01:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=none
+[    0.973087] vfio_pci: add [10de:13c2[ffffffff:ffffffff]] class 0x000000/00000000
+[    0.989739] vfio_pci: add [10de:0fbb[ffffffff:ffffffff]] class 0x000000/00000000
+[    2.508561] vfio-pci 0000:01:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=none
+[ 1182.379966] vfio-pci 0000:01:00.0: enabling device (0000 -> 0003)
+[ 1182.380134] vfio-pci 0000:01:00.0: vfio_ecap_init: hiding ecap 0x1e@0x258
+[ 1182.380140] vfio-pci 0000:01:00.0: vfio_ecap_init: hiding ecap 0x19@0x900
+[ 1182.523411] vfio-pci 0000:00:1d.0: vfio_cap_init: hiding cap 0xa@0x58
