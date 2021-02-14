@@ -164,7 +164,48 @@ The first [code](../code/gpu.py) will check if a GPU was found by the Nvidia Con
 
 The actuall benchmark [code](../code/matmul.py) supplies the following results compared to the previous performed benchmark by myself.
 
+`tensorflow/tensorflow:latest-gpu` was the used Docker container image for this benchmark. All needed dependencies are pre-installed in this image.
 
+```shell
+docker pull tensorflow/tensorflow:latest-gpu
+```
+
+### Output
+The two tables show the execution time of the same benchmark. Results from table one are from a previous run on a bare-metal Ubuntu 18.04.5 LTS machine and the second results are from the KVM with GPU passthroug of this project.
+
+#### Container (native system)
+|    |     CPU    |     GPU    | Speedup |          
+|:--:|:----------:|:----------:|:-------:|          
+|  1 | 25.2533524 | 1.54997122 |    16   |          
+|  2 | 25.7863575 | 1.57203382 |    16   |          
+|  3 |  25.487624 | 1.54950751 |    16   |          
+|  4 | 25.1899653 | 1.56756516 |    16   |          
+|  5 | 25.8140456 | 1.57109671 |    16   |          
+
+#### Container (kernel-based virtual machine)
+|    |     CPU    |     GPU    | Speedup |          
+|:--:|:----------:|:----------:|:-------:|          
+|  1 | 20.3482751 | 1.57650887 |    12   |          
+|  2 | 20.3560136 | 1.58154564 |    12   |          
+|  3 | 20.5811199 | 1.53468656 |    13   |          
+|  4 | 20.5927688 | 1.57579147 |    13   |          
+|  5 | 20.4500192 | 1.53758522 |    13   | 
+
+On average the CPU is 20% slower on the KVM Docker machine while the GPU is 0.0005% slower that the native system.
+
+---
+
+##### Disclaimer
+The 20% is calculated on the average from the first CPU values (table 1) devided through the average of the second CPU values (table 2).
+The 0.0005% is calculated on the average from the first GPI values (table 1) devided through the average of the second GPU values (table 2).
+
+---
+
+##### Diagram
+![](https://i.imgur.com/dCDqcG8.png)
+
+##### Discussion
+As the diagram shows the performance of the GPU passthrough is bare-metal performance as the CPU has about 20% performance losses.
 
 ## Kubernetes
 Kubernetes is used to orchestrate containers. Containers respectively microservices can be scaled up and down by Kubernetes.
