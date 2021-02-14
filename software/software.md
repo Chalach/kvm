@@ -11,18 +11,60 @@
 1. [Reference](#reference)
 
 ## Introduction
+Software and hardware work closely together nowadays and the goal is to automate as much as possible. Using pre-defined configurations and automation tools help in deployment and achieve greater flexibility in data centers. The configuration overhead should be minimized to minimum and most of the decissions are software driven. Software-defined networking (SDN) technology is an approach for network management which creates a dynamic and programmatically efficient network configuration . Microservice architecture is a variant of the service-oriented architecture (SOA) which creates an application as a collection of loosly coupled services. Those are only two of many approaches to manage a infrastructure in a data center. Both are currently state of the art approaches.
 
-Installing `Docker` and `Nvidia Docker Contianer` to perform a benchmark.
-
-https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
+The aim is to simulate and recreate such a scenarion by using Docker in combination with Kubernetes and Terraform to provide a infrastructure as a service (IaaS). It should show the capabilities of current data centers. The infrastructure is based on the previously created KVM. A neat feature is the GPU passthrough to provide a container for graphic-intensive tasks as data centers are deploying more and more VMs with GPUs attached to them. 
 
 ## Docker
+Docker is a container environment which creates, deployes and manages containers. The role of Docker is to create microservices. In order to orchestrate them it is possible to use Docker Swarm but in this case Kubernetes is used as it is more widespread than Docker Swarm.
+
+### Installation
+The installation of Docker under Ubuntu 18.04.5 LTS is just using the Docker’s official convenience script. It installs Docker and enables the service for Docker.
 
 ```shell=
 curl https://get.docker.com | sh && sudo systemctl --now enable docker
 ```
 
+By default Docker is a root user. It is possible to use Docker as a non-root user by adding the user to the `docker` group.
+
+```shell
+sudo usermod -aG docker <your-user>
+```
+
+---
+**Warning:**
+
+Adding a user to the “docker” group grants them the ability to run containers which can be used to obtain root privileges on the Docker host. Refer to Docker Daemon Attack Surface for more information.
+
+---
+
 ### NVIDIA Container Toolkit
+The NVIDIA Container Toolkit allows users to build and run GPU accelerated containers. This was the reason why a GPU passthrough was realized with KVM. A Nvidia container will be used check the performance of the GPU passthrough and the focus will afterwards switch to the orchestration without a GPU accelerated container.
+
+#### CUDA (Driver)
+To get access to the gragpics card the current driver must be installed. The following commands will install the linux header files for the current kernel, add the CUDA repository to the package manager and install the CUDA driver.
+
+```shell
+sudo apt-get install linux-headers-$(uname -r)
+
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID | sed -e 's/\.//g')
+
+wget https://developer.download.nvidia.com/compute/cuda/repos/$distribution/x86_64/cuda-$distribution.pin
+
+sudo mv cuda-$distribution.pin /etc/apt/preferences.d/cuda-repository-pin-600
+
+sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/$distribution/x86_64/7fa2af80.pub
+
+echo "deb http://developer.download.nvidia.com/compute/cuda/repos/$distribution/x86_64 /" | sudo tee /etc/apt/sources.list.d/cuda.list
+
+sudo apt-get update
+sudo apt-get -y install cuda-drivers
+```
+
+Here are some recommended [post-installation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#post-installation-actions) steps.
+
+#### Installation
+After the graphic cards driver is installed the Nvidia Container Toolkit can be installed with the following commands.
 
 ```shell=
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
@@ -45,10 +87,13 @@ sudo systemctl restart docker
 ```
 
 #### Verify the installation
-The installation can be verified with the following sample Docker container.
+The installation verifies the Docker and Nvidia Container Toolkit installation with the following sample Docker container.
+
 ```shell=
 sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 ```
+
+Important is the `--gpus all` parameter of the above command. It switches all available GPUs into the container.
 
 ##### Output
 
@@ -74,31 +119,13 @@ Wed Feb 10 19:37:29 2021
 +-----------------------------------------------------------------------------+
 ```
 
-##### (Optional) Add user to the Docker group
-The user can be added to the Docker group.
 
-:::danger
-The docker group grants privileges equivalent to the root user. For details on how this impacts security in your system, see Docker Daemon Attack Surface.
-:::
-
-```shell=
-sudo usermod -aG docker $USER
-```
-
-### Use Nvidia GPU on the host system
-In order to fully use the GPU on the host system it is neccessary to install the needed drivers.
-#### Install CUDA
-```shell=
-sudo apt install nvidia-cuda-toolkit
-```
-
-
-#### Check Version
+#### Check the CUDA installation on the host system
 ```shell=
 nvcc --version
 ```
 
-#### Output
+##### Output
 ```shell=
 nvcc: NVIDIA (R) Cuda compiler driver
 Copyright (c) 2005-2017 NVIDIA Corporation
@@ -106,7 +133,7 @@ Built on Fri_Nov__3_21:07:56_CDT_2017
 Cuda compilation tools, release 9.1, V9.1.85
 ```
 
-Check if the Driver loaded successfully.
+#### Check the driver version
 
 ```shell=
 nvidia-smi
@@ -115,10 +142,16 @@ nvidia-smi
 ![](https://i.imgur.com/W160JfL.png)
 
 ## Benchmark
-Running Code and data output of the results.
+The following benchmark will show a quick performance overview of the GPU passthrough differenciated to a previous performed benchmark by myself. The previous benchmark was performed natively on Ubuntu 18.04.5 LTS on the host machine and inside a Nvidia Docker container. Both cases, natively and inside a Nvidia Docker container will be compared in this and the previous benchmark. Mainly the results of the GPU are viewed. The CPU performance from a KVM will not be covered fully in this project.
+
+The first [code](../code/gpu.py) will check if a GPU was found by the Nvidia Container Toolkit. As we already checked those steps previously this is an optional step.
+
+The actuall benchmark [code](../code/matmul.py) supplies the following results compared to the previous performed benchmark by myself.
+
+
 
 ## Kubernetes
-Container orchestration
+Kubernetes is used to orchestrate containers. Containers respectively microservices can be scaled up and down by Kubernetes.
 
 ```shell
 sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2 curl
@@ -128,10 +161,15 @@ sudo apt-get update
 sudo apt-get install -y kubectl
 ```
 
+### Use case
+Creation of a K8 cluster with auto-scaling, load-balancing, self-healing.
+
 ## Terraform
-IAAS (Infrastructure as a Service)
+Terraform is an open-source infrastructure as code software tool. Infrastructure as a Service (IaaS) is an ever-growing sector that is located in the cloud area. Many customer do not like to manage their hardware locally at their facillity and move their infrastructure into the cloud. This saves space, resources, money and personell at a given fee. The infrastructure is managed externally with higher performance at a lower price. Terraform helps to manage such a infrastructure.
 
 ### Installation
+The following commands will install Terraform on Ubuntu 18.04.5 LTS.
+
 ```shell
 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 ```
@@ -144,6 +182,14 @@ sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.rel
 sudo apt install terraform
 ```
 
+### Use case
+New deployment of virtual machines.
+
 ## Reference
+* https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
+
 * https://medium.com/onfido-tech/container-orchestration-with-kubernetes-an-overview-da1d39ff2f91
+
 * https://www.terraform.io/
+
+* https://www.linuxfoundation.org/
