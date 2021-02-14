@@ -63,6 +63,22 @@ sudo apt-get -y install cuda-drivers
 
 Here are some recommended [post-installation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#post-installation-actions) steps.
 
+#### CUDA Toolkit
+The CUDA Toolkit is necessary to use TensorFlow and perform the benchmark on the VM.
+```shell
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin
+
+sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
+
+sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+
+sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /"
+
+sudo apt-get update
+
+sudo apt-get -y install cuda
+```
+
 #### Installation
 After the graphic cards driver is installed the Nvidia Container Toolkit can be installed with the following commands.
 
