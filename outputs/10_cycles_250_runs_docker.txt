@@ -1,0 +1,78 @@
+Sum of 250 runs.
+CPU (s):
+25.25335240200002
+GPU (s):
+1.5499712210003054
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.78635754700008
+GPU (s):
+1.5720338219998666
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.48762398800045
+GPU (s):
+1.5495075139997425
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.18996531100038
+GPU (s):
+1.5675651649999054
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.81404560700048
+GPU (s):
+1.571096714000305
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.91638712799977
+GPU (s):
+1.5809439260001454
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+26.62749219899979
+GPU (s):
+1.5694362180001917
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.898785342000338
+GPU (s):
+1.5532066579999082
+GPU speedup over CPU: 16x
+
+
+Sum of 250 runs.
+CPU (s):
+25.67703757900017
+GPU (s):
+1.6072475639994082
+GPU speedup over CPU: 15x
+
+
+Sum of 250 runs.
+CPU (s):
+26.665075439000248
+GPU (s):
+1.5645390250001583
+GPU speedup over CPU: 17x
